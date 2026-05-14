@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { teacherAPI } from '../../services/api';
 import { BookOpen, CheckCircle, FileText, Clock } from 'lucide-react';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
@@ -31,17 +32,21 @@ const TeacherDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((s, i) => (
-          <div key={i} className="card flex items-center gap-4">
-            <div className={`p-4 rounded-2xl ${s.color}`}>
-              <s.icon className="w-6 h-6" />
+        {isLoading ? (
+          [1,2,3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+        ) : (
+          stats.map((s, i) => (
+            <div key={i} className="card flex items-center gap-4">
+              <div className={`p-4 rounded-2xl ${s.color}`}>
+                <s.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm font-medium">{s.label}</p>
+                <p className="text-xl font-bold text-navy-900">{s.val}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">{s.label}</p>
-              <p className="text-xl font-bold text-navy-900">{s.val}</p>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -63,9 +68,10 @@ const TeacherDashboard = () => {
         
         <div className="p-6 min-h-[300px]">
           {isLoading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-12 bg-gray-100 rounded-xl" />
-              <div className="h-12 bg-gray-100 rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-12 w-full rounded-xl" />
             </div>
           ) : (
             <>

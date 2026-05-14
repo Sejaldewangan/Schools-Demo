@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GraduationCap, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 
 const DEMO_CREDENTIALS = [
@@ -25,6 +26,7 @@ const LoginPage = () => {
     setLoading(true);
     try {
       await login(email, password);
+      toast.success(`Welcome back! Logged in as ${email}`);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Invalid credentials. Please try again.');
@@ -69,7 +71,7 @@ const LoginPage = () => {
         </div>
 
         {/* Card */}
-        <div className="glass rounded-3xl p-8 shadow-glass">
+        <motion.div layoutId="portal-card" className="glass rounded-3xl p-8 shadow-glass bg-white/10 backdrop-blur-xl">
           <h2 className="text-xl font-bold text-white mb-6">Sign in to your account</h2>
 
           {error && (
@@ -83,7 +85,12 @@ const LoginPage = () => {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <motion.form
+            animate={error ? { x: [-10, 10, -10, 10, 0] } : {}}
+            transition={{ duration: 0.4 }}
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-300" />
               <input
@@ -124,7 +131,7 @@ const LoginPage = () => {
                 <div className="w-5 h-5 border-2 border-navy-900 border-t-transparent rounded-full animate-spin" />
               ) : 'Sign In'}
             </button>
-          </form>
+          </motion.form>
 
           {/* Demo credentials */}
           <div className="mt-6">
@@ -141,7 +148,7 @@ const LoginPage = () => {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <p className="text-center text-navy-400 text-xs mt-6">
           © 2024 EPS School Management System

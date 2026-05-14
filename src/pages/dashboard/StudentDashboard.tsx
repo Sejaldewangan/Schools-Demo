@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { studentAPI } from '../../services/api';
 import { Calendar, CreditCard, Award, Download, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -27,7 +28,23 @@ const StudentDashboard = () => {
   });
 
   if (loadingGrades || loadingFees) {
-    return <div className="animate-pulse flex gap-4"><div className="h-32 bg-gray-200 rounded-2xl w-full" /></div>;
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
+        <div className="grid lg:grid-cols-3 gap-6">
+          <Skeleton className="h-80 lg:col-span-2 rounded-2xl" />
+          <Skeleton className="h-80 rounded-2xl" />
+        </div>
+      </div>
+    );
   }
 
   const grades = gradesData?.data || [];
@@ -94,7 +111,7 @@ const StudentDashboard = () => {
                   <XAxis dataKey="subject" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                   <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                   <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)'}} />
-                  <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="score" radius={[6, 6, 0, 0]} isAnimationActive={true} animationDuration={1500}>
                     {chartData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.score / entry.max > 0.8 ? '#10b981' : entry.score / entry.max > 0.6 ? '#f59e0b' : '#ef4444'} />
                     ))}

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, LayoutDashboard, Users, BookOpen, Calendar, Settings, Menu, X, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
 
   // Example generic nav links based on role (would be more robust in reality)
   const navLinks = [
@@ -17,7 +19,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex font-sans text-gray-900">
+    <motion.div layoutId="portal-card" className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
       {/* Sidebar */}
       <AnimatePresence mode="wait">
         {sidebarOpen && (
@@ -25,6 +27,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
+            transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.4 }}
             className="bg-white border-r border-gray-200 h-screen sticky top-0 flex flex-col flex-shrink-0 z-20 overflow-hidden"
           >
             {/* Sidebar Header */}
@@ -43,16 +46,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               {navLinks.map((link, i) => {
                 const Icon = link.icon;
                 return (
-                  <a
+                  <motion.a
                     key={i}
                     href={link.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                       i === 0 ? 'bg-navy-800 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-navy-900'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <motion.div
+                      whileHover={{ rotate: 12, scale: 1.15 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
+                      <Icon className="w-5 h-5 transition-colors group-hover:text-gold-500" />
+                    </motion.div>
                     {link.label}
-                  </a>
+                  </motion.a>
                 );
               })}
             </nav>
@@ -103,13 +113,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 relative">
           <div className="max-w-7xl mx-auto">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname + user?.role}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>
-    </div>
+    </motion.div>
   );
 };
 

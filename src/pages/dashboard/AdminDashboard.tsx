@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { adminAPI } from '../../services/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, IndianRupee, TrendingUp, UserCheck } from 'lucide-react';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 const AdminDashboard = () => {
   const { data, isLoading } = useQuery({
@@ -13,7 +14,24 @@ const AdminDashboard = () => {
     },
   });
 
-  if (isLoading) return <div className="animate-pulse flex gap-4"><div className="h-32 bg-gray-200 rounded-2xl w-1/4" /></div>;
+  if (isLoading) return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-end">
+        <div>
+          <Skeleton className="h-8 w-40 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+      </div>
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Skeleton className="h-96 lg:col-span-2 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
+      </div>
+    </div>
+  );
 
   const { overview, revenue, enrollment, recentStudents } = data;
 
@@ -67,7 +85,7 @@ const AdminDashboard = () => {
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                <Area type="monotone" dataKey="students" stroke="#3949ab" strokeWidth={3} fillOpacity={1} fill="url(#colorStudents)" />
+                <Area type="monotone" dataKey="students" stroke="#3949ab" strokeWidth={3} fillOpacity={1} fill="url(#colorStudents)" isAnimationActive={true} animationDuration={1500} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
