@@ -1,11 +1,117 @@
-import axios from 'axios';
+import axios, { type AxiosAdapter } from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// --- MOCK ADAPTER FOR DEMO ---
+const mockAdapter: AxiosAdapter = async (config) => {
+  const url = config.url || '';
+  const data = config.data ? JSON.parse(config.data) : {};
+
+  // Delay simulation
+  await new Promise(resolve => setTimeout(resolve, 600));
+
+  const respond = (status: number, responseData: any) => ({
+    data: responseData,
+    status,
+    statusText: 'OK',
+    headers: {},
+    config,
+    request: {}
+  });
+
+  // Auth endpoints
+  if (url.includes('/auth/login')) {
+    const { email } = data;
+    let role = 'student';
+    if (email.includes('admin')) role = 'admin';
+    if (email.includes('teacher')) role = 'teacher';
+
+    return respond(200, {
+      success: true,
+      token: 'mock-jwt-token-123',
+      user: { id: 'mock-id-1', name: role.charAt(0).toUpperCase() + role.slice(1) + ' User', email, role }
+    });
+  }
+  
+  if (url.includes('/auth/me')) {
+    return respond(200, {
+      success: true,
+      user: { id: 'mock-id-1', name: 'Mock User', email: 'mock@eps.school', role: 'admin' }
+    });
+  }
+
+  // Admin endpoints
+  if (url.includes('/admin/stats')) {
+    return respond(200, {
+      success: true,
+      data: {
+        overview: { totalStudents: 2540, totalTeachers: 145 },
+        revenue: { totalCollected: 15400000 },
+        attendance: { overall: 95 },
+        enrollment: [
+          { month: 'Jan', students: 2400 },
+          { month: 'Feb', students: 2450 },
+          { month: 'Mar', students: 2500 },
+          { month: 'Apr', students: 2540 },
+        ],
+        recentStudents: [
+          { _id: '1', name: 'Sarah Connor', createdAt: new Date().toISOString() },
+          { _id: '2', name: 'John Smith', createdAt: new Date().toISOString() },
+          { _id: '3', name: 'Emma Watson', createdAt: new Date().toISOString() }
+        ]
+      }
+    });
+  }
+
+  // Teacher endpoints
+  if (url.includes('/teachers') && url.includes('/classes')) {
+    return respond(200, {
+      success: true,
+      data: [
+        { _id: '1', grade: '10', section: 'A', name: 'Mathematics', academicYear: '2024-25', capacity: 30 },
+        { _id: '2', grade: '10', section: 'B', name: 'Physics', academicYear: '2024-25', capacity: 30 },
+        { _id: '3', grade: '11', section: 'C', name: 'Chemistry', academicYear: '2024-25', capacity: 25 },
+      ]
+    });
+  }
+
+  // Student endpoints
+  if (url.includes('/students') && url.includes('/grades')) {
+    return respond(200, {
+      success: true,
+      summary: { percentage: '88%' },
+      data: [
+        { subject: { name: 'Math' }, marksObtained: 85, maxMarks: 100 },
+        { subject: { name: 'Science' }, marksObtained: 92, maxMarks: 100 },
+        { subject: { name: 'English' }, marksObtained: 78, maxMarks: 100 },
+        { subject: { name: 'History' }, marksObtained: 88, maxMarks: 100 },
+      ]
+    });
+  }
+
+  if (url.includes('/students') && url.includes('/fees')) {
+    return respond(200, {
+      success: true,
+      summary: { totalDue: 15000, totalPaid: 45000 },
+      data: [
+        { _id: '1', feeType: 'Tuition Fee - Q1', amount: 15000, dueDate: '2024-04-15', status: 'paid' },
+        { _id: '2', feeType: 'Tuition Fee - Q2', amount: 15000, dueDate: '2024-07-15', status: 'paid' },
+        { _id: '3', feeType: 'Tuition Fee - Q3', amount: 15000, dueDate: '2024-10-15', status: 'paid' },
+        { _id: '4', feeType: 'Tuition Fee - Q4', amount: 15000, dueDate: '2025-01-15', status: 'pending' },
+      ]
+    });
+  }
+
+  // Fallback for any other endpoints to prevent crash
+  return respond(200, { success: true, data: [] });
+};
+// -----------------------------
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  adapter: mockAdapter // Inject the mock adapter here!
 });
 
 // Attach JWT on every request

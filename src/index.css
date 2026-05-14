@@ -140,7 +140,15 @@
   }
 
   .bg-hero {
-    background: linear-gradient(135deg, #0d1757 0%, #1a237e 50%, #283593 100%);
+    background: linear-gradient(-45deg, #0d1757, #1a237e, #283593, #1565c0);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .bg-section {

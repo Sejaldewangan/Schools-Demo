@@ -15,6 +15,7 @@ const NAV_LINKS = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -44,18 +45,26 @@ const Navbar = () => {
           </a>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-2" onMouseLeave={() => setHoveredLink(null)}>
             {NAV_LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                onMouseEnter={() => setHoveredLink(link.label)}
+                className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   scrolled
-                    ? 'text-gray-600 hover:text-navy-800 hover:bg-navy-50'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                    ? 'text-gray-600 hover:text-navy-800'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {link.label}
+                {hoveredLink === link.label && (
+                  <motion.div
+                    layoutId="nav-underline"
+                    className={`absolute bottom-0 left-2 right-2 h-[2px] rounded-full ${scrolled ? 'bg-navy-800' : 'bg-gold-400'}`}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
               </a>
             ))}
           </nav>

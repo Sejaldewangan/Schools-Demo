@@ -9,7 +9,7 @@ const SLIDES = [
     highlight: 'Leaders Today',
     subtitle: 'A premier institution dedicated to academic excellence, character development, and holistic growth for every student.',
     cta: 'Admissions Open 2024–25',
-    bg: 'from-[#0d1757] via-[#1a237e] to-[#283593]',
+    bg: 'bg-hero',
     stat: { value: '98%', label: 'Board Pass Rate' },
   },
   {
@@ -17,7 +17,7 @@ const SLIDES = [
     highlight: 'Infinite Possibilities',
     subtitle: 'State-of-the-art facilities, experienced faculty, and a curriculum designed to prepare students for global success.',
     cta: 'Explore Programs',
-    bg: 'from-[#1a237e] via-[#283593] to-[#311b92]',
+    bg: 'bg-hero',
     stat: { value: '25+', label: 'Years of Excellence' },
   },
   {
@@ -25,7 +25,7 @@ const SLIDES = [
     highlight: 'Building Character',
     subtitle: 'Beyond academics, we develop well-rounded individuals through sports, arts, technology, and community service.',
     cta: 'View Campus Life',
-    bg: 'from-[#0d1757] via-[#1a237e] to-[#1565c0]',
+    bg: 'bg-hero',
     stat: { value: '2000+', label: 'Alumni Network' },
   },
 ];
@@ -50,7 +50,7 @@ const HeroSection = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
-          className={`absolute inset-0 bg-gradient-to-br ${slide.bg}`}
+          className={`absolute inset-0 ${slide.bg}`}
         />
       </AnimatePresence>
 
@@ -84,17 +84,45 @@ const HeroSection = () => {
 
             {/* Heading */}
             <AnimatePresence mode="wait">
-              <motion.div key={current} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white font-display leading-[1.05] mb-3">
+              <motion.div
+                key={current}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
+                  exit: { opacity: 0, y: -20, transition: { duration: 0.5 } }
+                }}
+              >
+                <motion.h1
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 1, 0.5, 1] } }
+                  }}
+                  className="text-5xl sm:text-6xl lg:text-7xl font-black text-white font-display leading-[1.05] mb-3"
+                >
                   {slide.title}
-                </h1>
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black font-display leading-[1.05] mb-6"
-                  style={{ background: 'linear-gradient(135deg, #fdd835, #f9a825)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                </motion.h1>
+                <motion.h1
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 1, 0.5, 1] } }
+                  }}
+                  className="text-5xl sm:text-6xl lg:text-7xl font-black font-display leading-[1.05] mb-6"
+                  style={{ background: 'linear-gradient(135deg, #fdd835, #f9a825)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                >
                   {slide.highlight}
-                </h1>
-                <p className="text-lg text-navy-200 max-w-xl mb-8 leading-relaxed">
+                </motion.h1>
+                <motion.p
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 1, 0.5, 1] } }
+                  }}
+                  className="text-lg text-navy-200 max-w-xl mb-8 leading-relaxed"
+                >
                   {slide.subtitle}
-                </p>
+                </motion.p>
               </motion.div>
             </AnimatePresence>
 

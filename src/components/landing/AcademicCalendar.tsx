@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 
 const EVENTS: Record<string, { date: number; title: string; type: string }[]> = {
@@ -37,6 +37,14 @@ const MONTH_KEYS = ['2024-01', '2024-02', '2024-03'];
 
 const AcademicCalendar = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<number | null>(null);
+
+  const changeMonth = (newIdx: number) => {
+    setDirection(newIdx > currentIdx ? 1 : -1);
+    setCurrentIdx(newIdx);
+    setSelectedDate(null);
+  };
 
   const events = EVENTS[MONTH_KEYS[currentIdx]] || [];
 
@@ -57,44 +65,59 @@ const AcademicCalendar = () => {
             <div className="glass rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <button
-                  onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                  onClick={() => changeMonth(Math.max(0, currentIdx - 1))}
                   disabled={currentIdx === 0}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <h3 className="text-white font-bold font-display">{MONTHS[currentIdx]}</h3>
                 <button
-                  onClick={() => setCurrentIdx((i) => Math.min(MONTHS.length - 1, i + 1))}
+                  onClick={() => changeMonth(Math.min(MONTHS.length - 1, currentIdx + 1))}
                   disabled={currentIdx === MONTHS.length - 1}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Mini calendar grid */}
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {['S','M','T','W','T','F','S'].map((d, i) => (
-                  <div key={i} className="text-navy-400 text-xs py-1 font-medium">{d}</div>
-                ))}
-                {/* Placeholder days — static layout */}
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                  const hasEvent = events.some(e => e.date === day);
-                  return (
-                    <div
-                      key={day}
-                      className={`text-xs py-1.5 rounded-lg cursor-default transition-all ${
-                        hasEvent
-                          ? 'bg-gold-500 text-navy-900 font-bold'
-                          : 'text-navy-300 hover:bg-white/10'
-                      }`}
-                    >
-                      {day}
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Mini calendar grid with Carousel transition */}
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={currentIdx}
+                  custom={direction}
+                  initial={{ opacity: 0, x: direction > 0 ? 20 : -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: direction > 0 ? -20 : 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="grid grid-cols-7 gap-1 text-center"
+                >
+                  {['S','M','T','W','T','F','S'].map((d, i) => (
+                    <div key={i} className="text-navy-400 text-xs py-1 font-medium">{d}</div>
+                  ))}
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                    const hasEvent = events.some(e => e.date === day);
+                    const isSelected = selectedDate === day;
+                    return (
+                      <motion.button
+                        key={day}
+                        onClick={() => hasEvent && setSelectedDate(isSelected ? null : day)}
+                        animate={isSelected ? { scale: [1, 1.15, 1], rotate: [0, -5, 5, 0] } : {}}
+                        transition={isSelected ? { duration: 0.5, ease: "easeInOut" } : {}}
+                        className={`text-xs py-1.5 rounded-lg transition-all ${
+                          isSelected
+                            ? 'bg-gold-400 text-navy-900 font-bold shadow-[0_0_15px_rgba(253,216,53,0.5)]'
+                            : hasEvent
+                              ? 'bg-gold-500/80 text-navy-900 font-bold hover:bg-gold-400 cursor-pointer'
+                              : 'text-navy-300 hover:bg-white/10 cursor-default'
+                        }`}
+                      >
+                        {day}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              </AnimatePresence>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {Object.entries(TYPE_COLORS).slice(0, 4).map(([type, cls]) => (
@@ -106,31 +129,47 @@ const AcademicCalendar = () => {
             </div>
           </div>
 
-          {/* Events List */}
-          <div className="lg:col-span-2 space-y-3">
-            {events.map((event, i) => (
+          {/* Events List with Carousel transition */}
+          <div className="lg:col-span-2 overflow-hidden">
+            <AnimatePresence mode="wait" custom={direction}>
               <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
+                key={currentIdx}
+                custom={direction}
+                initial={{ opacity: 0, x: direction > 0 ? 30 : -30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="glass rounded-xl p-4 flex items-center gap-4"
+                exit={{ opacity: 0, x: direction > 0 ? -30 : 30 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-3"
               >
-                <div className="w-12 h-12 bg-gold-500 rounded-xl flex flex-col items-center justify-center flex-shrink-0">
-                  <span className="text-lg font-black text-navy-900 font-display leading-none">{event.date}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-semibold text-sm">{event.title}</h4>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <CalendarDays className="w-3 h-3 text-navy-400" />
-                    <span className="text-navy-400 text-xs">{MONTHS[currentIdx]}</span>
-                  </div>
-                </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium flex-shrink-0 ${TYPE_COLORS[event.type]}`}>
-                  {event.type}
-                </span>
+                {events.map((event, i) => {
+                  const isSelected = selectedDate === event.date;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => setSelectedDate(isSelected ? null : event.date)}
+                      className={`glass rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all duration-300 ${isSelected ? 'ring-2 ring-gold-400 scale-[1.02] bg-white/15' : 'hover:bg-white/15 hover:scale-[1.01]'}`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-gold-400' : 'bg-gold-500'}`}>
+                        <span className="text-lg font-black text-navy-900 font-display leading-none">{event.date}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-semibold text-sm">{event.title}</h4>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <CalendarDays className="w-3 h-3 text-navy-400" />
+                          <span className="text-navy-400 text-xs">{MONTHS[currentIdx]}</span>
+                        </div>
+                      </div>
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium flex-shrink-0 ${TYPE_COLORS[event.type]}`}>
+                        {event.type}
+                      </span>
+                    </motion.div>
+                  );
+                })}
               </motion.div>
-            ))}
+            </AnimatePresence>
           </div>
         </div>
       </div>
