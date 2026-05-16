@@ -12,9 +12,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   // Example generic nav links based on role (would be more robust in reality)
   const navLinks = [
     { icon: LayoutDashboard, label: 'Overview', href: '/dashboard' },
-    ...(user?.role === 'admin' ? [{ icon: Users, label: 'Manage Users', href: '#' }] : []),
-    ...(user?.role === 'teacher' ? [{ icon: BookOpen, label: 'My Classes', href: '#' }] : []),
-    ...(user?.role === 'student' ? [{ icon: Calendar, label: 'My Timetable', href: '#' }] : []),
+    ...(user?.role === 'admin' ? [{ icon: Users, label: 'Manage Users', href: '/dashboard?view=manage-users' }] : []),
+    ...(user?.role === 'teacher' ? [{ icon: BookOpen, label: 'My Classes', href: '/dashboard?tab=classes' }] : []),
+    ...(user?.role === 'student' ? [{ icon: Calendar, label: 'My Timetable', href: '/dashboard' }] : []),
     { icon: Settings, label: 'Settings', href: '#' },
   ];
 
@@ -45,6 +45,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <nav className="flex-1 overflow-y-auto custom-scrollbar py-6 px-4 space-y-1">
               {navLinks.map((link, i) => {
                 const Icon = link.icon;
+                const isActive = location.pathname === link.href || (location.pathname + location.search) === link.href;
+                
                 return (
                   <motion.a
                     key={i}
@@ -52,7 +54,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      i === 0 ? 'bg-navy-800 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-navy-900'
+                      isActive ? 'bg-navy-800 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-navy-900'
                     }`}
                   >
                     <motion.div

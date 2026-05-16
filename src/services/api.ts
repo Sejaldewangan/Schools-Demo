@@ -102,6 +102,43 @@ const mockAdapter: AxiosAdapter = async (config) => {
     });
   }
 
+  // New Admin endpoints mocks
+  if (url.includes('/admin/search')) {
+    return respond(200, {
+      success: true,
+      data: [
+        { _id: 's1', userId: { name: 'Alice Smith' }, rollNumber: 'R101', classId: { name: '10-A' } },
+        { _id: 's2', userId: { name: 'Bob Wilson' }, rollNumber: 'R102', classId: { name: '10-A' } }
+      ]
+    });
+  }
+
+  if (url.includes('/admin/admissions')) return respond(201, { success: true, message: 'Student registered' });
+  if (url.includes('/admin/assign-teacher')) return respond(200, { success: true, message: 'Teacher assigned' });
+  if (url.includes('/admin/notices')) return respond(201, { success: true, message: 'Notice created' });
+  if (url.includes('/admin/engagements')) return respond(201, { success: true, message: 'Engagement assigned' });
+
+  // New Teacher endpoints mocks
+  if (url.includes('/teachers/attendance')) return respond(201, { success: true, message: 'Attendance submitted' });
+  if (url.includes('/teachers/class-students')) {
+    return respond(200, {
+      success: true,
+      data: [
+        { _id: 's1', userId: { name: 'Alice Smith', email: 'alice@eps.school' }, rollNumber: 'R101', classId: { name: '10-A' } },
+        { _id: 's2', userId: { name: 'Bob Wilson', email: 'bob@eps.school' }, rollNumber: 'R102', classId: { name: '10-A' } }
+      ]
+    });
+  }
+  if (url.includes('/timetable')) {
+    return respond(200, {
+      success: true,
+      data: [
+        { dayOfWeek: 'Monday', periodNumber: 1, subjectId: { name: 'Math' }, classId: { name: '10-A' }, startTime: '08:00', endTime: '09:00' },
+        { dayOfWeek: 'Monday', periodNumber: 2, subjectId: { name: 'Physics' }, classId: { name: '10-B' }, startTime: '09:00', endTime: '10:00' },
+      ]
+    });
+  }
+
   // Fallback for any other endpoints to prevent crash
   return respond(200, { success: true, data: [] });
 };
@@ -149,6 +186,11 @@ export const adminAPI = {
   getUsers: (params?: { role?: string; page?: number; limit?: number }) =>
     api.get('/admin/users', { params }),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  admissions: (data: any) => api.post('/admin/admissions', data),
+  assignTeacher: (data: any) => api.patch('/admin/assign-teacher', data),
+  search: (query: string) => api.get('/admin/search', { params: { query } }),
+  createNotice: (data: any) => api.post('/admin/notices', data),
+  assignEngagement: (data: any) => api.post('/admin/engagements', data),
 };
 
 // ── Students ──────────────────────────────────────────────────────────
@@ -166,6 +208,9 @@ export const teacherAPI = {
   getClasses: (id: string) => api.get(`/teachers/${id}/classes`),
   getGrades: (id: string) => api.get(`/teachers/${id}/grades`),
   getAttendance: (id: string) => api.get(`/teachers/${id}/attendance`),
+  submitAttendance: (data: any) => api.post('/teachers/attendance', data),
+  getTimetable: (id: string) => api.get(`/teachers/${id}/timetable`),
+  getClassStudents: (query?: string) => api.get('/teachers/class-students', { params: { query } }),
 };
 
 // ── Attendance ────────────────────────────────────────────────────────

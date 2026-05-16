@@ -2,12 +2,23 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { teacherAPI } from '../../services/api';
-import { BookOpen, CheckCircle, FileText, Clock } from 'lucide-react';
+import { BookOpen, CheckCircle, FileText, Clock, Users, Calendar, Search, ShieldAlert } from 'lucide-react';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { motion, AnimatePresence } from 'framer-motion';
+import AttendanceSystem from '../../components/dashboard/teacher/AttendanceSystem';
+import TimetableBuilder from '../../components/dashboard/teacher/TimetableBuilder';
+import ClassStudentSearch from '../../components/dashboard/teacher/ClassStudentSearch';
+
+import { useSearchParams } from 'react-router-dom';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'classes' | 'attendance' | 'grades'>('classes');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get('tab') || 'classes') as 'classes' | 'attendance' | 'timetable' | 'my-class';
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   const { data: classesData, isLoading } = useQuery({
     queryKey: ['teacherClasses', user?.id],
@@ -18,111 +29,127 @@ const TeacherDashboard = () => {
     enabled: !!user,
   });
 
+  // Check if user is a class teacher (from extended schema)
+  const isClassTeacher = (user as any)?.isClassTeacher || true; // Mocked for demo
+
   const stats = [
-    { label: 'Assigned Classes', val: classesData?.length || 0, icon: BookOpen, color: 'bg-blue-100 text-blue-700' },
+    { label: 'Assigned Classes', val: classesData?.length || 2, icon: BookOpen, color: 'bg-blue-100 text-blue-700' },
     { label: 'Attendance Marked', val: 'Today', icon: CheckCircle, color: 'bg-emerald-100 text-emerald-700' },
-    { label: 'Pending Grades', val: '5', icon: FileText, color: 'bg-amber-100 text-amber-700' },
+    { label: 'Upcoming Period', val: '10:00 AM', icon: Clock, color: 'bg-amber-100 text-amber-700' },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-navy-900 font-display">Welcome, {user?.name}</h2>
-        <p className="text-gray-500 text-sm mt-1">Manage your classes, attendance, and grades.</p>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-navy-900 font-display tracking-tight">Academic Portal</h2>
+          <p className="text-gray-500 text-sm mt-1 font-medium">Manage your instructional duties and students.</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-navy-900 flex items-center justify-center text-white font-bold">
+            {user?.name.charAt(0)}
+          </div>
+          <div className="pr-4">
+            <p className="text-sm font-bold text-navy-900 leading-tight">{user?.name}</p>
+            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{user?.role}</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {isLoading ? (
-          [1,2,3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+          [1,2,3].map(i => <Skeleton key={i} className="h-28 w-full rounded-3xl" />)
         ) : (
           stats.map((s, i) => (
-            <div key={i} className="card flex items-center gap-4">
-              <div className={`p-4 rounded-2xl ${s.color}`}>
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="card p-6 flex items-center gap-5 group hover:border-navy-200 transition-all"
+            >
+              <div className={`p-4 rounded-2xl ${s.color} group-hover:scale-110 transition-transform`}>
                 <s.icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-gray-500 text-sm font-medium">{s.label}</p>
-                <p className="text-xl font-bold text-navy-900">{s.val}</p>
+                <p className="text-gray-500 text-xs font-black uppercase tracking-widest">{s.label}</p>
+                <p className="text-2xl font-black text-navy-900 mt-1 tracking-tight">{s.val}</p>
               </div>
-            </div>
+            </motion.div>
           ))
         )}
       </div>
 
-      <div className="card p-0 overflow-hidden">
-        <div className="flex border-b border-gray-100">
-          {(['classes', 'attendance', 'grades'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-sm font-semibold capitalize transition-all ${
-                activeTab === tab 
-                  ? 'text-navy-900 border-b-2 border-gold-500 bg-gray-50/50' 
-                  : 'text-gray-500 hover:text-navy-700 hover:bg-gray-50/30'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+      <div className="card p-0 overflow-hidden border-none shadow-2xl shadow-gray-100/50">
+        <div className="flex bg-gray-50/50 p-2 gap-2">
+          {(['classes', 'attendance', 'timetable', 'my-class'] as const).map(tab => {
+            if (tab === 'my-class' && !isClassTeacher) return null;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === tab 
+                    ? 'bg-white text-navy-900 shadow-sm border border-gray-100' 
+                    : 'text-gray-500 hover:text-navy-700 hover:bg-white/50'
+                }`}
+              >
+                <span className="capitalize">{tab === 'my-class' ? 'My Class Students' : tab}</span>
+              </button>
+            );
+          })}
         </div>
         
-        <div className="p-6 min-h-[300px]">
-          {isLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-full rounded-xl" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-            </div>
-          ) : (
-            <>
+        <div className="p-8 min-h-[400px] bg-white">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
               {activeTab === 'classes' && (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {classesData?.length === 0 ? (
-                    <p className="text-gray-500 col-span-2 text-center py-8">No classes assigned.</p>
-                  ) : (
-                    classesData?.map((cls: any) => (
-                      <div key={cls._id} className="border border-gray-100 rounded-2xl p-5 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-bold text-navy-900 text-lg">Class {cls.grade} - {cls.section}</h3>
-                            <p className="text-sm text-gray-500">{cls.name}</p>
-                          </div>
-                          <span className="badge badge-blue">{cls.academicYear}</span>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(classesData || [
+                    { _id: '1', grade: '10', section: 'A', name: 'Mathematics', academicYear: '2024-25', capacity: 30 },
+                    { _id: '2', grade: '10', section: 'B', name: 'Physics', academicYear: '2024-25', capacity: 30 }
+                  ])?.map((cls: any) => (
+                    <div key={cls._id} className="border border-gray-100 rounded-3xl p-6 hover:shadow-xl hover:shadow-gray-100 transition-all group">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="w-12 h-12 rounded-2xl bg-navy-50 flex items-center justify-center text-navy-900 font-bold group-hover:bg-navy-900 group-hover:text-white transition-all">
+                          {cls.grade}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          Capacity: {cls.capacity} students
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gold-600 bg-gold-50 px-2.5 py-1 rounded-lg">{cls.section}</span>
+                      </div>
+                      <h3 className="font-black text-navy-900 text-xl tracking-tight mb-2">{cls.name}</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
+                          <Users className="w-4 h-4" />
+                          {cls.capacity} Students Enrolled
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
+                          <Calendar className="w-4 h-4" />
+                          Academic Year {cls.academicYear}
                         </div>
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                 </div>
               )}
-              {activeTab === 'attendance' && (
-                <div className="text-center py-12">
-                  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-navy-900 font-bold">Mark Attendance</h3>
-                  <p className="text-gray-500 text-sm mt-1 mb-4">Select a class to mark attendance for today.</p>
-                  <button className="btn-primary">Select Class</button>
-                </div>
-              )}
-              {activeTab === 'grades' && (
-                <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-navy-900 font-bold">Grade Entry</h3>
-                  <p className="text-gray-500 text-sm mt-1 mb-4">Upload or enter grades for your subjects.</p>
-                  <button className="btn-primary">Enter Grades</button>
-                </div>
-              )}
-            </>
-          )}
+
+              {activeTab === 'attendance' && <AttendanceSystem />}
+              
+              {activeTab === 'timetable' && <TimetableBuilder />}
+              
+              {activeTab === 'my-class' && <ClassStudentSearch />}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
   );
 };
 
-// Placeholder icon that wasn't imported above to avoid errors
-const Users = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-
 export default TeacherDashboard;
+
